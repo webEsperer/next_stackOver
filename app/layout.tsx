@@ -32,7 +32,7 @@ const RootLayout = async ({
   children: React.ReactNode;
 }>) => {
   const session = await auth();
-  console.log(session)
+
   return (
     <html lang="en" suppressHydrationWarning>
       <SessionProvider session={session}>

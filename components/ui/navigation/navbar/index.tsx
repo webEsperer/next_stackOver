@@ -4,10 +4,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import {Theme} from "./Theme";
+import MobileNavigation from "./MobileNavigation";
 
 const Navbar = () => {
   return (
-    <div className="flex-between background-light900_dark200 shadow-light-300 dark:shadow-none text-dark-100 dark:text-light-900 z-50 gap-5 p-6 sm:px-12">
+    <nav className="flex-between background-light900_dark200 shadow-light-300 dark:shadow-none text-dark-100 dark:text-light-900 z-50 gap-5 p-6 sm:px-12">
       <Link className="flex-center gap-1" href="/">
         <Image src="/images/site-logo.svg" width={30} height={30} alt="logo" />
         <p className="h2-bold max-sm:hidden">Dev<span className="text-primary-500">Flow</span></p>
@@ -17,8 +18,9 @@ const Navbar = () => {
 
       <div className="flex-between gap-5">
         <Theme />
+        <MobileNavigation />
       </div>
-    </div>
+    </nav>
   )
 }
 
