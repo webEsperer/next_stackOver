@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation"
 import { SheetClose } from "../../sheet"
 import React from "react"
 
-const Navlinks = ({ isMobileNav = false }: { isMobileNav: boolean }) => {
+const Navlinks = ({ isMobileNav = false }: { isMobileNav?: boolean }) => {
   const pathname = usePathname()
 
   const userId = 1
@@ -38,7 +38,7 @@ const Navlinks = ({ isMobileNav = false }: { isMobileNav: boolean }) => {
 
       return (
         isMobileNav ? (<SheetClose asChild key={link.route}>{LinkComponent}</SheetClose>) : (
-          <React.Fragment>{LinkComponent}</React.Fragment>
+          <React.Fragment key={link.route}>{LinkComponent}</React.Fragment>
         )
       )
 

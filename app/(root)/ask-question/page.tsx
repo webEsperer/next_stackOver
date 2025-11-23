@@ -1,6 +1,15 @@
-const page = () => {
+import QuestionForm from "@/components/ui/forms/QuestionForm";
+
+const AskAQuestion = () => {
   return (
-    <div>page</div>
-  )
-}
-export default page
+    <>
+      <h1 className="h1-bold text-dark100_light900">Ask a question</h1>
+
+      <div className="mt-9">
+        <QuestionForm />
+      </div>
+    </>
+  );
+};
+
+export default AskAQuestion;
