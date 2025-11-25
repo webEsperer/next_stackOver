@@ -21,7 +21,7 @@ const AccountSchema = new Schema(
     name: { type: String, required: true },
     image: { type: String },
     password: { type: String },
-    authMethod: { type: String, required: true, enum: ["github", "google", "credentials"] },
+    provider: { type: String, required: true },
     providerAccountId: { type: String, required: true },
   },
   { timestamps: true }
