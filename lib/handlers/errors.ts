@@ -1,42 +1,60 @@
-// import { NextResponse } from "next/server";
-// import { RequestError, ValidationError } from "../http-errors";
 // import { ZodError } from "zod";
+// import { RequestError, ValidationError } from "../http-errors";
 // import logger from "../logger";
 
 // export type ResponseType = "api" | "server";
 
-// const formatResponse = (
-//   responseType: ResponseType,
+// import { NextResponse } from "next/server";
+
+// const formatApiError = (
 //   status: number,
 //   message: string,
-//   errors?: Record<string, string[]> | undefined
+//   errors?: Record<string, string[]>
 // ) => {
-//   const responseContent = {
+//   return NextResponse.json(
+//     {
+//       success: false,
+//       errors: {
+//         message,
+//         details: errors,
+//       },
+//     },
+//     { status }
+//   );
+// };
+
+// const formatServerError = (
+//   status: number,
+//   message: string,
+//   errors?: Record<string, string[]>
+// ) => {
+//   return {
+//     status,
 //     success: false,
 //     errors: {
 //       message,
 //       details: errors,
 //     },
 //   };
-
-//   return responseType === "api" ? NextResponse.json(responseContent, { status }) : { status, ...responseContent };
 // };
 
+
 // const handleError = (error: unknown, responseType: ResponseType = "server") => {
+//   const isApi = responseType === "api";
+
+//   // ---------- RequestError ----------
 //   if (error instanceof RequestError) {
 //     logger.error(
 //       { err: error },
 //       `${responseType.toUpperCase()} Error: ${error.message}`
 //     );
 
-//     return formatResponse(
-//       responseType,
-//       error.statusCode,
-//       error.message,
-//       error.errors
-//     );
+//     return isApi
+//       ? formatApiError(error.statusCode, error.message, error.errors)
+//       : formatServerError(error.statusCode, error.message, error.errors);
 //   }
 
+//   // ---------- ZodError ----------
 //   if (error instanceof ZodError) {
 //     const validationError = new ValidationError(
 //       error.flatten().fieldErrors as Record<string, string[]>
@@ -47,89 +65,69 @@
 //       `Validation Error: ${validationError.message}`
 //     );
 
-//     return formatResponse(
-//       responseType,
-//       validationError.statusCode,
-//       validationError.message,
-//       validationError.errors
-//     );
+//     return isApi
+//       ? formatApiError(
+//           validationError.statusCode,
+//           validationError.message,
+//           validationError.errors
+//         )
+//       : formatServerError(
+//           validationError.statusCode,
+//           validationError.message,
+//           validationError.errors
+//         );
 //   }
 
+//   // ---------- Standard Error ----------
 //   if (error instanceof Error) {
 //     logger.error(error.message);
 
-//     return formatResponse(responseType, 500, error.message);
+//     return isApi
+//       ? formatApiError(500, error.message)
+//       : formatServerError(500, error.message);
 //   }
 
-//   logger.error({ err: error }, "An unexpected error occurred");
-//   return formatResponse(responseType, 500, "An unexpected error occurred");
+//   // ---------- Unknown ----------
+//   logger.error({ err: error }, "Unexpected error");
+
+//   return isApi
+//     ? formatApiError(500, "Unexpected error")
+//     : formatServerError(500, "Unexpected error");
 // };
-// // const handleError = (error: unknown, responseType: ResponseType = "server") => {
-// //   if (error instanceof RequestError) {
-// //     logger.error({ err: error }, `${responseType.toUpperCase()} Error: ${error.message}`);
-// //     return formatResponse(responseType, error.statusCode, error.message, error.errors);
-// //   }
-
-// //   if (error instanceof ZodError) {
-// //     const validationError = new ValidationError(error.flatten().fieldErrors as Record<string, string[]>);
-
-// //     logger.error({ err: error }, `Validation Error: ${validationError.message}`);
-
-// //     return formatResponse(responseType, validationError.statusCode, validationError.message, validationError.errors);
-// //   }
-
-// //   if (error instanceof Error) {
-// //     logger.error(error.message);
-// //     return formatResponse(responseType, 500, error.message);
-// //   }
-// //   logger.error({ err: error }, "An unexpected error occurred");
-// //   return formatResponse(responseType, 500, "An unexpected error occurred");
-// // };
 
 // export default handleError;
+import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { RequestError, ValidationError } from "../http-errors";
 import logger from "../logger";
 
 export type ResponseType = "api" | "server";
 
-// src/lib/response/formatResponse.ts
-import { NextResponse } from "next/server";
+// Typy odpowiedzi
+type ApiErrorReturn = NextResponse<{
+  success: false;
+  errors: {
+    message: string;
+    details?: Record<string, string[]>;
+  };
+}>;
 
-const formatApiError = (
-  status: number,
-  message: string,
-  errors?: Record<string, string[]>
-) => {
-  return NextResponse.json(
-    {
-      success: false,
-      errors: {
-        message,
-        details: errors,
-      },
-    },
-    { status }
-  );
-};
-
-const formatServerError = (
-  status: number,
-  message: string,
-  errors?: Record<string, string[]>
-) => {
-  return {
-    status,
-    success: false,
-    errors: {
-      message,
-      details: errors,
-    },
+type ServerErrorReturn = {
+  status: number;
+  success: false;
+  errors: {
+    message: string;
+    details?: Record<string, string[]>;
   };
 };
 
+// Function overloads - definiują różne typy zwracane
+function handleError(error: unknown, responseType: "api"): ApiErrorReturn;
+function handleError(error: unknown, responseType: "server"): ServerErrorReturn;
+function handleError(error: unknown, responseType?: ResponseType): ApiErrorReturn | ServerErrorReturn;
 
-const handleError = (error: unknown, responseType: ResponseType = "server") => {
+// Implementacja
+function handleError(error: unknown, responseType: ResponseType = "server") {
   const isApi = responseType === "api";
 
   // ---------- RequestError ----------
@@ -183,6 +181,39 @@ const handleError = (error: unknown, responseType: ResponseType = "server") => {
   return isApi
     ? formatApiError(500, "Unexpected error")
     : formatServerError(500, "Unexpected error");
-};
+}
 
 export default handleError;
+
+// Funkcje formatujące pozostają bez zmian
+const formatApiError = (
+  status: number,
+  message: string,
+  errors?: Record<string, string[]>
+): ApiErrorReturn => {
+  return NextResponse.json(
+    {
+      success: false,
+      errors: {
+        message,
+        details: errors,
+      },
+    },
+    { status }
+  );
+};
+
+const formatServerError = (
+  status: number,
+  message: string,
+  errors?: Record<string, string[]>
+): ServerErrorReturn => {
+  return {
+    status,
+    success: false,
+    errors: {
+      message,
+      details: errors,
+    },
+  };
+};
